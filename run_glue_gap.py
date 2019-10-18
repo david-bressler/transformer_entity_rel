@@ -434,7 +434,7 @@ def get_args(parser):
     parser.add_argument("--do_eval", action='store_true',
                         help="Whether to run eval on the dev set.")
     parser.add_argument("--evaluate_during_training", action='store_true',
-                        help="Rul evaluation during training at each logging step.")
+                        help="Run evaluation during training at each logging step.")
     parser.add_argument("--do_lower_case", action='store_true',
                         help="Set this flag if you are using an uncased model.")
 

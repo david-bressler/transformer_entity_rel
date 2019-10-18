@@ -1,6 +1,6 @@
 
 
-
+#cp tokenization_utils.py /home/ec2-user/anaconda3/envs/JupyterSystemEnv/lib/python3.6/site-packages/transformers/tokenization_utils.py
 
 import torch
 from transformers import *
@@ -10,6 +10,9 @@ import pandas as pd
 import numpy as np
 import pickle
 import pdb
+import os
+import shutil
+import time
 
 
 args_list=[]
@@ -24,11 +27,13 @@ for trial_num in range(num_trials):
     
     #model_typea=0 # 0: BERT, 1: XLNET, 2: Roberta, 3: Distilbert
     model_typea=run_glue_gap.gen_grid_val([0,1,2],'sel')
-    small_or_big=run_glue_gap.gen_grid_val([0,1],'sel') # 0: small, 1: big
-    args.con_or_lib=run_glue_gap.gen_grid_val([0,1],'sel') # 0: con, 1: lib
-    batch_size=run_glue_gap.gen_grid_val([8,16,32],'sel')
+    #small_or_big=run_glue_gap.gen_grid_val([0,1],'sel') # 0: small, 1: big
+    small_or_big=0 # 0: small, 1: big
+    #args.con_or_lib=run_glue_gap.gen_grid_val([0,1],'sel') # 0: con, 1: lib
+    args.con_or_lib=0 # 0: con, 1: lib
+    batch_size=run_glue_gap.gen_grid_val([8,16],'sel')
     
-    args.num_train_epochs=run_glue_gap.gen_grid_val([5,8,11],'sel')
+    args.num_train_epochs=run_glue_gap.gen_grid_val([5,9],'sel')
     #args.num_train_epochs=run_glue_gap.gen_grid_val([1,2],'sel')
     args.do_train=True
     args.do_eval=True
@@ -40,6 +45,7 @@ for trial_num in range(num_trials):
     args.logging_steps =50
     args.save_steps=1000
     args.max_seq_length = 512
+    args.seed=round(time.time())
     
     args.learning_rate =run_glue_gap.gen_grid_val([1e-6,5e-5],'exp')
     args.adam_epsilon= 1e-8
@@ -111,5 +117,6 @@ for trial_num in range(num_trials):
     
     outputta=(results_list,args_list)
     pickle.dump(outputta, open("outputta.pickle","wb"))
+    shutil.rmtree(args.output_dir)
 
    
