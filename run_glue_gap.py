@@ -363,13 +363,13 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
         # HACK(label indices are swapped in RoBERTa pretrained model)
         label_list[1], label_list[2] = label_list[2], label_list[1] 
     examples = processor.get_dev_examples(args.data_dir) if evaluate else processor.get_train_examples(args.data_dir)
-#     features = convert_examples_to_features(examples, label_list, args.max_seq_length, tokenizer, output_mode,
-#         cls_token_at_end=bool(args.model_type in ['xlnet']),            # xlnet has a cls token at the end
-#         cls_token=tokenizer.cls_token,
-#         sep_token=tokenizer.sep_token,
-#         cls_token_segment_id=2 if args.model_type in ['xlnet'] else 0,
-#         pad_on_left=bool(args.model_type in ['xlnet']),                 # pad on the left for xlnet
-#         pad_token_segment_id=4 if args.model_type in ['xlnet'] else 0)
+    #     features = convert_examples_to_features(examples, label_list, args.max_seq_length, tokenizer, output_mode,
+    #         cls_token_at_end=bool(args.model_type in ['xlnet']),            # xlnet has a cls token at the end
+    #         cls_token=tokenizer.cls_token,
+    #         sep_token=tokenizer.sep_token,
+    #         cls_token_segment_id=2 if args.model_type in ['xlnet'] else 0,
+    #         pad_on_left=bool(args.model_type in ['xlnet']),                 # pad on the left for xlnet
+    #         pad_token_segment_id=4 if args.model_type in ['xlnet'] else 0)
     features = convert_examples_to_features(examples,
         tokenizer,
         label_list=label_list,
@@ -383,10 +383,10 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
     #if args.local_rank in [-1, 0]:
     #    logger.info("Saving features into cached file %s", cached_features_file)
     #    torch.save(features, cached_features_file)
-    
+    #
     if args.local_rank == 0 and not evaluate:
         torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache
-    
+    #
     # Convert to Tensors and build dataset
     all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
     #all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
@@ -401,7 +401,6 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
         all_labels = torch.tensor([f.label for f in features], dtype=torch.long)
     elif output_mode == "regression":
         all_labels = torch.tensor([f.label for f in features], dtype=torch.float)
-
     dataset = TensorDataset(all_input_ids, all_attention_mask, all_token_type_ids, all_labels)
     return dataset
 
@@ -549,23 +548,23 @@ def run_main(parser, args):
             os.environ["TPU_NAME"] = args.tpu_name
         if args.xrt_tpu_config:
             os.environ["XRT_TPU_CONFIG"] = args.xrt_tpu_config
-
+        #
         assert "TPU_IP_ADDRESS" in os.environ
         assert "TPU_NAME" in os.environ
         assert "XRT_TPU_CONFIG" in os.environ
-
+        #
         import torch_xla
         import torch_xla.core.xla_model as xm
         args.device = xm.xla_device()
         args.xla_model = xm
-    
+
     # Setup logging
     logging.basicConfig(format = '%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                         datefmt = '%m/%d/%Y %H:%M:%S',
                         level = logging.INFO if args.local_rank in [-1, 0] else logging.WARN)
     logger.warning("Process rank: %s, device: %s, n_gpu: %s, distributed training: %s, 16-bits training: %s",
                     args.local_rank, device, args.n_gpu, bool(args.local_rank != -1), args.fp16)
-
+    #
     # Set seed
     set_seed(args)
 
@@ -592,8 +591,8 @@ def run_main(parser, args):
         torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
 
     model.to(args.device)
-#     if args.n_gpu > 1:
-#         model = torch.nn.DataParallel(model)
+    #     if args.n_gpu > 1:
+    #         model = torch.nn.DataParallel(model)
 
     logger.info("Training/evaluation parameters %s", args)
 
