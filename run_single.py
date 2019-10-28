@@ -1,6 +1,28 @@
 
 #Run one
 
+
+# #Distilbert best settings
+# f1: 0.875
+# con_or_lib: 0
+# learning_rate: 6.297632766696337e-05
+# num_train_epochs: 5
+# per_gpu_train_batch_size: 8
+# gradient_accumulation_steps: 4
+# warmup_steps: 97
+# model_name_or_path: distilbert-base-uncased
+
+# #XLNET best settings
+# f1: 0.8895705521472393
+# con_or_lib: 0
+# learning_rate: 7.550040585288487e-06
+# num_train_epochs: 9
+# per_gpu_train_batch_size: 8
+# gradient_accumulation_steps: 2
+# warmup_steps: 97
+# model_name_or_path: xlnet-base-cased
+
+
 import torch
 from transformers import *
 import run_glue_gap
@@ -10,6 +32,9 @@ import numpy as np
 import pickle
 import shutil
 import time
+import os
+
+
 
 parser = run_glue_gap.argparse.ArgumentParser()
 args = run_glue_gap.get_args(parser)
@@ -108,10 +133,15 @@ elif args.con_or_lib==2:
 args.output_dir='/tmp/entrel/'
 args.task_name='entityrel'
 
+#REMOVE EXISTING WEIGHTS:
+if os.path.exists(args.output_dir):
+    shutil.rmtree(args.output_dir)
 
 #args.per_gpu_eval_batch_size=2
 #args.per_gpu_train_batch_size=2
 #args.gradient_accumulation_steps=16
 
 results=run_glue_gap.run_main(parser,args)
-shutil.rmtree(args.output_dir)
+
+
+
