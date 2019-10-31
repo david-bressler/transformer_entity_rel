@@ -26,11 +26,11 @@ for trial_num in range(num_trials):
     args = run_glue_gap.get_args(parser)
     
     #model_typea=0 # 0: BERT, 1: XLNET, 2: Roberta, 3: Distilbert
-    model_typea=run_glue_gap.gen_grid_val([0,1,2],'sel')
+    model_typea=run_glue_gap.gen_grid_val([0,1,2,3],'sel')
     #small_or_big=run_glue_gap.gen_grid_val([0,1],'sel') # 0: small, 1: big
     small_or_big=0 # 0: small, 1: big
-    #args.con_or_lib=run_glue_gap.gen_grid_val([0,1],'sel') # 0: con, 1: lib
-    args.con_or_lib=0 # 0: con, 1: lib
+    args.the_dataset=run_glue_gap.gen_grid_val([1,2,3,4],'sel') # cheat 1,2,3,4
+    #args.con_or_lib=0 # 0: con, 1: lib
     batch_size=run_glue_gap.gen_grid_val([8,16],'sel')
     
     args.num_train_epochs=run_glue_gap.gen_grid_val([5,9],'sel')
@@ -49,7 +49,7 @@ for trial_num in range(num_trials):
     
     args.learning_rate =run_glue_gap.gen_grid_val([1e-6,5e-5],'exp')
     args.adam_epsilon= 1e-8
-    args.warmup_steps= run_glue_gap.gen_grid_val([0,100],'lin_round')
+    args.warmup_steps= run_glue_gap.gen_grid_val([50,100],'lin_round')
     args.weight_decay= 0.0
     
     if small_or_big==0:
@@ -103,10 +103,14 @@ for trial_num in range(num_trials):
         args.model_name_or_path='xlm-mlm-en-2048'
         args.do_lower_case=False
     
-    if args.con_or_lib==0:
-        args.data_dir='/home/ec2-user/SageMaker/Data/entrel_data_con'
-    else:
-        args.data_dir='/home/ec2-user/SageMaker/Data/entrel_data_lib'
+    if args.the_dataset==1:
+        args.data_dir='/home/ec2-user/SageMaker/Data/entrel_data_cheat1'
+    elif args.the_dataset==2:
+        args.data_dir='/home/ec2-user/SageMaker/Data/entrel_data_cheat2'
+    elif args.the_dataset==3:
+        args.data_dir='/home/ec2-user/SageMaker/Data/entrel_data_cheat3'
+    elif args.the_dataset==4:
+        args.data_dir='/home/ec2-user/SageMaker/Data/entrel_data_cheat4'
     args.output_dir='/tmp/entrel/'
     args.task_name='entityrel'
     
