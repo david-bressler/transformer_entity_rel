@@ -34,6 +34,7 @@ import logging
 import os
 import random
 import pickle
+import sklearn
 
 import numpy as np
 import torch
@@ -324,7 +325,8 @@ def evaluate(args, model, tokenizer, prefix=""):
         elif args.output_mode == "regression":
             preds = np.squeeze(preds)
         result = compute_metrics(eval_task, preds, out_label_ids)
-        result2= {"acc": simple_accuracy(preds, out_label_ids)} #DWB
+        #result2= {"acc": simple_accuracy(preds, out_label_ids)} #DWB
+        result2= {"macrof1": sklearn.metrics.f1_score( list(map(float,list(out_label_ids))), list(map(float,list(preds))), average='macro')}
         results.update(result)
         results2.update(result2) #DWB
 
@@ -338,7 +340,7 @@ def evaluate(args, model, tokenizer, prefix=""):
                 logger.info("  %s = %s", key, str(result2[key]))
                 writer.write("%s = %s\n" % (key, str(result2[key])))
 
-    return results
+    return results2
 
 
 def load_and_cache_examples(args, task, tokenizer, evaluate=False):

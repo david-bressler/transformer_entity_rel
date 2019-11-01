@@ -25,15 +25,15 @@ for trial_num in range(num_trials):
     parser = run_glue_gap.argparse.ArgumentParser()
     args = run_glue_gap.get_args(parser)
     
-    #model_typea=0 # 0: BERT, 1: XLNET, 2: Roberta, 3: Distilbert
-    model_typea=run_glue_gap.gen_grid_val([0,1,2,3],'sel')
+    #model_typea=2 # 0: BERT, 1: XLNET, 2: Roberta, 3: Distilbert
+    model_typea=run_glue_gap.gen_grid_val([0,1,2],'sel')
     #small_or_big=run_glue_gap.gen_grid_val([0,1],'sel') # 0: small, 1: big
     small_or_big=0 # 0: small, 1: big
     args.the_dataset=run_glue_gap.gen_grid_val([1,2,3,4],'sel') # cheat 1,2,3,4
     #args.con_or_lib=0 # 0: con, 1: lib
-    batch_size=run_glue_gap.gen_grid_val([8,16],'sel')
+    batch_size=run_glue_gap.gen_grid_val([8,16,32],'sel')
     
-    args.num_train_epochs=run_glue_gap.gen_grid_val([5,9],'sel')
+    args.num_train_epochs=run_glue_gap.gen_grid_val([4,9,14],'sel')
     #args.num_train_epochs=run_glue_gap.gen_grid_val([1,2],'sel')
     args.do_train=True
     args.do_eval=True
@@ -47,9 +47,9 @@ for trial_num in range(num_trials):
     args.max_seq_length = 512
     args.seed=round(time.time())
     
-    args.learning_rate =run_glue_gap.gen_grid_val([1e-6,5e-5],'exp')
+    args.learning_rate =run_glue_gap.gen_grid_val([5e-6,1e-4],'exp')
     args.adam_epsilon= 1e-8
-    args.warmup_steps= run_glue_gap.gen_grid_val([50,100],'lin_round')
+    args.warmup_steps= run_glue_gap.gen_grid_val([50,150],'lin_round')
     args.weight_decay= 0.0
     
     if small_or_big==0:
