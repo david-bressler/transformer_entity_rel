@@ -19,7 +19,7 @@ from __future__ import absolute_import, division, print_function
 
 #DWB: changed utils_glue to utils_glue_gap
 from utils_glue_gap import (compute_metrics,
-                        output_modes, processors, simple_accuracy)
+                        output_modes, processors, simple_accuracy, InputExample)
 
 
 #from transformers import glue_compute_metrics as compute_metrics
@@ -35,6 +35,7 @@ import os
 import random
 import pickle
 import sklearn
+import pdb
 
 import numpy as np
 import torch
@@ -342,6 +343,49 @@ def evaluate(args, model, tokenizer, prefix=""):
 
     return results2
 
+def load_single_example(args, task, tokenizer, stringa, evaluate=False):
+    if args.local_rank not in [-1, 0] and not evaluate:
+        torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache
+    processor = processors[task]()
+    output_mode = output_modes[task]
+    label_list = processor.get_labels()
+    guid='dev-0'
+    label='1'
+    text_b=None
+    examples=[InputExample(guid=guid, text_a=stringa, text_b=text_b, label=label)]
+    features = convert_examples_to_features(examples,
+        tokenizer,
+        label_list=label_list,
+        max_length=args.max_seq_length,
+        output_mode=output_mode,
+        pad_on_left=bool(args.model_type in ['xlnet']),                 # pad on the left for xlnet
+        pad_token=tokenizer.convert_tokens_to_ids([tokenizer.pad_token])[0],
+        pad_token_segment_id=4 if args.model_type in ['xlnet'] else 0,
+        )
+    #DWB: don't need to save cached file either
+    #if args.local_rank in [-1, 0]:
+    #    logger.info("Saving features into cached file %s", cached_features_file)
+    #    torch.save(features, cached_features_file)
+    #
+    if args.local_rank == 0 and not evaluate:
+        torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache
+    #
+    # Convert to Tensors and build dataset
+    all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
+    #all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
+    all_attention_mask = torch.tensor([f.attention_mask for f in features], dtype=torch.long)
+    #all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
+    all_token_type_ids = torch.tensor([f.token_type_ids for f in features], dtype=torch.long)
+#     if output_mode == "classification":
+#         all_label_ids = torch.tensor([f.label_id for f in features], dtype=torch.long)
+#     elif output_mode == "regression":
+#         all_label_ids = torch.tensor([f.label_id for f in features], dtype=torch.float)
+    if output_mode == "classification":
+        all_labels = torch.tensor([f.label for f in features], dtype=torch.long)
+    elif output_mode == "regression":
+        all_labels = torch.tensor([f.label for f in features], dtype=torch.float)
+    dataset = TensorDataset(all_input_ids, all_attention_mask, all_token_type_ids, all_labels)
+    return dataset
 
 def load_and_cache_examples(args, task, tokenizer, evaluate=False):
     if args.local_rank not in [-1, 0] and not evaluate:
@@ -372,6 +416,7 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
     #         cls_token_segment_id=2 if args.model_type in ['xlnet'] else 0,
     #         pad_on_left=bool(args.model_type in ['xlnet']),                 # pad on the left for xlnet
     #         pad_token_segment_id=4 if args.model_type in ['xlnet'] else 0)
+    pdb.set_trace()
     features = convert_examples_to_features(examples,
         tokenizer,
         label_list=label_list,
