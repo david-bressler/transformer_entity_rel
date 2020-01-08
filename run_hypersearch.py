@@ -25,13 +25,13 @@ for trial_num in range(num_trials):
     parser = run_glue_gap.argparse.ArgumentParser()
     args = run_glue_gap.get_args(parser)
     
-    #model_typea=2 # 0: BERT, 1: XLNET, 2: Roberta, 3: Distilbert
-    model_typea=run_glue_gap.gen_grid_val([1,2],'sel')
+    model_typea=2 # 0: BERT, 1: XLNET, 2: Roberta, 3: Distilbert
+    #model_typea=run_glue_gap.gen_grid_val([1,2],'sel')
     #small_or_big=run_glue_gap.gen_grid_val([0,1],'sel') # 0: small, 1: big
     small_or_big=0 # 0: small, 1: big
     #args.con_or_lib=run_glue_gap.gen_grid_val([0,1],'sel') # 0: con, 1: lib
     args.con_or_lib=0 # 0: con, 1: lib
-    batch_size=run_glue_gap.gen_grid_val([8,16,32],'sel')
+    batch_size=run_glue_gap.gen_grid_val([8,16],'sel')
     
     args.num_train_epochs=run_glue_gap.gen_grid_val([5,7,9,11],'sel')
     #args.num_train_epochs=run_glue_gap.gen_grid_val([1,2],'sel')
@@ -105,8 +105,8 @@ for trial_num in range(num_trials):
         args.do_lower_case=False
     
     if args.con_or_lib==0:
-        #args.data_dir='/home/ec2-user/SageMaker/Data/entrel_data_con'
-        args.data_dir='/home/ec2-user/SageMaker/Data/entrel_data_cheat2'
+        args.data_dir='/home/ec2-user/SageMaker/Data/entrel_data_con'
+        #args.data_dir='/home/ec2-user/SageMaker/Data/entrel_data_cheat1'
     else:
         args.data_dir='/home/ec2-user/SageMaker/Data/entrel_data_lib'
     args.output_dir='/tmp/entrel/'
