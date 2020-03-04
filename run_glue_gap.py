@@ -340,7 +340,10 @@ def evaluate(args, model, tokenizer, prefix=""):
             for key in sorted(result2.keys()):
                 logger.info("  %s = %s", key, str(result2[key]))
                 writer.write("%s = %s\n" % (key, str(result2[key])))
-
+            writer.write('..............\n')
+            for key in args.__dict__:
+                #print(key + ': ' + str(args.__dict__[key]))
+                writer.write(key + ': ' + str(args.__dict__[key]) + '\n')
     return results2
 
 def load_single_example(args, task, tokenizer, stringa, evaluate=False):
@@ -416,7 +419,6 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
     #         cls_token_segment_id=2 if args.model_type in ['xlnet'] else 0,
     #         pad_on_left=bool(args.model_type in ['xlnet']),                 # pad on the left for xlnet
     #         pad_token_segment_id=4 if args.model_type in ['xlnet'] else 0)
-    #pdb.set_trace()
     features = convert_examples_to_features(examples,
         tokenizer,
         label_list=label_list,
@@ -581,6 +583,7 @@ def run_main(parser, args):
     if args.local_rank == -1 or args.no_cuda:
         device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
         args.n_gpu = torch.cuda.device_count()
+        args.n_gpu=1 #DWB: Needed to set this to 1 in order to make things work
     else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         torch.cuda.set_device(args.local_rank)
         device = torch.device("cuda", args.local_rank)
@@ -638,8 +641,8 @@ def run_main(parser, args):
         torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
 
     model.to(args.device)
-    #     if args.n_gpu > 1:
-    #         model = torch.nn.DataParallel(model)
+    if args.n_gpu > 1:
+        model = torch.nn.DataParallel(model)
 
     logger.info("Training/evaluation parameters %s", args)
 

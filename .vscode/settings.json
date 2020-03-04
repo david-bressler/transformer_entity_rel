@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "venventrel/bin/python3"
+    "python.pythonPath": "venventrel/bin/python3",
+    "git.ignoreLimitWarning": true
 }
