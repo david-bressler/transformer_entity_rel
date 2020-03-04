@@ -3,3 +3,4 @@ venvtransformerentrel
 *__pycache__*
 data
 runs
+.vscode
