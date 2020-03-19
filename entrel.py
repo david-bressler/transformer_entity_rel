@@ -43,60 +43,53 @@ class EntityRelevance:
         self.company_test='contexts_samples_MT_test_new'
         self.person_train='contexts_samples_PERSON_train'
         self.person_test='contexts_samples_PERSON_test'
+        self.company_train_mixed='mixmodel_samples_company_train'
+        self.company_test_mixed='mixmodel_samples_company_test'
+        self.person_train_mixed='mixmodel_samples_person_train'
+        self.person_test_mixed='mixmodel_samples_person_test'
     
     def open_file(self,fn):
         with open(fn,'r') as f:
             the_dic=json.loads(f.read())
         return the_dic
     
-    def select_sequence(self, article):
+    def select_sequence(self, article, add_tag=0, tagga='' ):
         con_body = article["conservative-marked-body"].replace("\n", "")
         con_seq = article["conservative-sequence"].replace("\n", "")
         lib_body = article["liberal-marked-body"].replace("\n", "")
         lib_seq = article["liberal-sequence"].replace("\n", "")
+        if add_tag==1:
+            if len(con_body)>0:
+                con_body= '<' + tagga + ' CON BOD> ' + con_body
+            if len(con_seq)>0:
+                con_seq= '<' + tagga + ' CON SEQ> ' + con_seq
+            if len(lib_body)>0:
+                lib_body= '<' + tagga + ' CON BOD> ' + lib_body
+            if len(lib_seq)>0:
+                lib_seq= '<' + tagga + ' LIB SEQ> ' + lib_seq
         lib_choice = ""
         con_choice = ""
-        if (
-            len(lib_seq) > 0 and len(lib_body) > 0
-        ):  # if both lib_seq and lib_body not empty
-            if len(lib_body.split()) < len(
-                lib_seq.split()
-            ):  # choose the shorter bw lib_body and lib_seq to append to lib
+        if (len(lib_seq) > 0 and len(lib_body) > 0):  # if both lib_seq and lib_body not empty
+            if len(lib_body.split()) < len(lib_seq.split()):  # choose the shorter bw lib_body and lib_seq to append to lib
                 lib_choice = lib_body
             else:
                 lib_choice = lib_seq
         else:  # if only one or neither are not empty
-            lib_choice = (
-                lib_seq
-                if len(lib_seq) > 0
-                else lib_body
-                if len(lib_body) > 0
-                else lib_choice
-            )
-        if (
-            len(con_seq) > 0 and len(con_body) > 0
-        ):  # if con_seq and con_body not empty
-            if len(con_body.split()) < len(
-                con_seq.split()
-            ):  # choose the shorter bw con_body and con_seq to append to con
+            lib_choice=lib_seq if len(lib_seq)>0 else lib_body if len(lib_body)>0 else lib_choice
+        if (len(con_seq) > 0 and len(con_body) > 0):  # if con_seq and con_body not empty
+            if len(con_body.split()) < len(con_seq.split()):  # choose the shorter bw con_body and con_seq to append to con
                 con_choice = con_body
             else:
                 con_choice = con_seq
         else:  # if only one or neither are not empty
-            con_choice = (
-                con_seq
-                if len(con_seq) > 0
-                else con_body
-                if len(con_body) > 0
-                else con_choice
-            )
+            con_choice=con_seq if len(con_seq)>0 else con_body if len(con_body)>0 else con_choice
         if len(con_choice) == 0:
             con_choice = lib_choice
         if len(lib_choice) == 0:
             lib_choice = con_choice
         if len(con_choice) == 0 and len(lib_choice) == 0:
-            con_choice = "asdfasdfasdfasdf"
-            lib_choice = "asdfasdfasdfasdf"
+            con_choice = "<BAD INPUT> asdfasdfasdfasdf"
+            lib_choice = "<BAD INPUT> asdfasdfasdfasdf"
         return con_choice
 
     def display_contents(self,fn):
@@ -124,7 +117,7 @@ class EntityRelevance:
     def explore_data(self):
         # fn=self.args.base_dir+'/data/contexts_samples_person_train.json'
         # self.display_contents(fn)
-        self.args=get_args()
+        self.args=self.get_args()
         fn=self.args.base_dir+'/data/contexts_samples_PERSON_train.json'
         self.display_contents(fn)
         # fn=self.args.base_dir+'/data/contexts_samples_person_test.json'
@@ -135,15 +128,23 @@ class EntityRelevance:
         self.display_contents(fn)
         fn=self.args.base_dir+'/data/contexts_samples_MT_test_new.json'
         self.display_contents(fn)
+        fn=self.args.base_dir+'/data/mixmodel_samples_company_train.json'
+        self.display_contents(fn)
+        fn=self.args.base_dir+'/data/mixmodel_samples_company_test.json'
+        self.display_contents(fn)
+        fn=self.args.base_dir+'/data/mixmodel_samples_person_train.json'
+        self.display_contents(fn)
+        fn=self.args.base_dir+'/data/mixmodel_samples_person_test.json'
+        self.display_contents(fn)
+        
 
-    def create_dataset(self,in_fn,out_fn,splitta,do_shuffle=0,sampla=1):
+    def create_dataset(self,in_fn,out_fn,splitta,do_shuffle=0,sampla=1,add_tag=0,tagga=''):
         the_dic=self.open_file(in_fn)
         the_targets=[docca['entity_relevance'] for docca in the_dic]
         conservative_inputs=[]
         for doc_ind, docca in enumerate(the_dic):
-            conservative_inputs.append(self.select_sequence(docca))
+            conservative_inputs.append(self.select_sequence(docca,add_tag,tagga))
         con_data = pd.DataFrame(list(zip(the_targets, conservative_inputs)), columns =['targets', 'texts']) 
-        print(con_data.head())
         if do_shuffle==1:
             con_data = con_data.sample(frac=1).reset_index(drop=True)#shuffle
         if splitta>0:
@@ -164,6 +165,7 @@ class EntityRelevance:
         os.mkdir(out_fn)
         con_train_data.to_csv(out_fn+'train.tsv',sep='\t',index=False,header=False)
         con_test_data.to_csv(out_fn+'dev.tsv',sep='\t',index=False,header=False)
+        print(con_train_data.head())
     
     def create_composite_ds(self,train_path,test_path,target):
         if os.path.isdir(target):
@@ -187,6 +189,32 @@ class EntityRelevance:
         df3 = df1.append(df2, ignore_index=True)
         df3.to_csv(target+'dev.tsv',sep='\t',index=False,header=False)
         print(np.shape(df1),np.shape(df2),np.shape(df3))
+
+    def create_datasets_mixed(self):
+        self.args=self.get_args()
+        self.create_dataset(self.args.base_dir+'/data/'+self.company_train_mixed+'.json',self.args.base_dir+'/data/company_mixed/', 0,do_shuffle=0,add_tag=1,tagga='COM')
+        print('CREATED COMPANY TRAIN/EVAL TSV')
+        self.create_dataset(self.args.base_dir+'/data/'+self.person_train_mixed+'.json',self.args.base_dir+'/data/person_mixed/', 0,do_shuffle=0,add_tag=1,tagga='PER')
+        print('CREATED PERSON TRAIN/EVAL TSV')
+        self.create_dataset(self.args.base_dir+'/data/'+self.company_test_mixed+'.json',self.args.base_dir+'/data/company_test_mixed/', 0,do_shuffle=0,add_tag=1,tagga='COM')
+        print('CREATED COMPANY TEST TSV')
+        self.create_dataset(self.args.base_dir+'/data/'+self.person_test_mixed+'.json',self.args.base_dir+'/data/person_test_mixed/', 0,do_shuffle=0,add_tag=1,tagga='PER')
+        print('CREATED PERSON TEST TSV')
+        path1=self.args.base_dir+'/data/company_mixed/'
+        path2=self.args.base_dir+'/data/person_mixed/'
+        target=self.args.base_dir+'/data/company_person_mixed/'
+        self.combine_datasets(path1,path2,target)
+        print('CREATED COMBINED COMPANY PERSON TRAIN/EVAL TSV')
+        path1=self.args.base_dir+'/data/company_test_mixed/'
+        path2=self.args.base_dir+'/data/person_test_mixed/'
+        target=self.args.base_dir+'/data/company_person_test_mixed/'
+        self.combine_datasets(path1,path2,target)
+        print('CREATED COMBINED COMPANY PERSON TEST TSV')
+        train_path=self.args.base_dir+'/data/company_person_mixed/'
+        test_path=self.args.base_dir+'/data/company_person_test_mixed/'
+        target=self.args.base_dir+'/data/company_person_fulltrainwtest_mixed/'
+        self.create_composite_ds(train_path,test_path,target)
+        print('CREATED COMPOSITE COMPANY_PERSON FULL TRAIN TSV WITH TEST TSV')
 
     def create_datasets(self):
         self.args=self.get_args()
@@ -225,7 +253,7 @@ class EntityRelevance:
         model_typea=2 # 0: BERT, 1: XLNET, 2: Roberta, 3: Distilbert, 4: XLM, 5:TransformerXL
         small_or_big=0 # 0: small, 1: big
         args.con_or_lib=0 # 0: con, 1: lib, 2: original
-        batch_size=16
+        batch_size=8
         args.num_train_epochs=3.0
         args.do_train=True
         args.do_eval=True
@@ -239,9 +267,9 @@ class EntityRelevance:
         args.max_seq_length = 512
         args.seed=round(time.time())
         #
-        args.learning_rate = 2.83e-5 #2.27e-5
+        args.learning_rate = 1.95e-5# 2.83e-5 #2.27e-5
         args.adam_epsilon=1e-8
-        args.warmup_steps= 67 # 86  
+        args.warmup_steps= 50 #67 # 86  
         args.weight_decay= 0.0
         #
         if small_or_big==0:
